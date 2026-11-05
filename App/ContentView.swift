@@ -55,8 +55,18 @@ struct ContentView: View {
                             .font(.title3.monospacedDigit())
                     }
                 }
-                Section {
-                    Text("«Automático» oculta las unidades que valen 0 a la izquierda. Añade el widget desde la pantalla de inicio o de bloqueo. Mantén pulsado el widget → Editar widget para elegir su fecha. «Usar datos de la app» solo funciona si iOS deja compartirlos (con Apple ID gratis suele no dejar).")
+                Section("Sincronización con el widget") {
+                    if SharedStore.isGroupAvailable {
+                        Label("Activa: los widgets leen esta fecha", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Label("No disponible en esta instalación", systemImage: "xmark.circle.fill")
+                            .foregroundStyle(.red)
+                        Text("iOS no deja compartir datos entre la app y el widget. Instala con AltStore, o configura la fecha dentro de cada widget (mantén pulsado → Editar widget → apaga «Usar datos de la app»).")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("«Automático» oculta las unidades que valen 0 a la izquierda.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

@@ -107,7 +107,19 @@ enum SharedStore {
 
     /// AltStore reescribe el App Group al instalar y lo deja en Info.plist (ALTAppGroups).
     static var groupID: String {
-        (Bundle.main.object(forInfoDictionaryKey: "ALTAppGroups") as? [String])?.first ?? defaultGroup
+        func altGroup(_ bundle: Bundle) -> String? {
+            (bundle.object(forInfoDictionaryKey: "ALTAppGroups") as? [String])?.first
+        }
+        if let id = altGroup(Bundle.main) { return id }
+        // Dentro del widget (.app/PlugIns/X.appex): probar con la app contenedora.
+        let parent = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+        if parent.pathExtension == "app", let bundle = Bundle(url: parent), let id = altGroup(bundle) { return id }
+        return defaultGroup
+    }
+
+    /// true si iOS concedió el App Group (sin él, app y widget no pueden compartir datos).
+    static var isGroupAvailable: Bool {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) != nil
     }
 
     private static var defaults: UserDefaults {
