@@ -60,8 +60,8 @@ struct Provider: TimelineProvider {
     private func makeEntries() -> (entries: [CountdownEntry], finished: Bool) {
         guard let target = SharedStore.targetDate else {
             let note = SharedStore.isGroupAvailable
-                ? "Elige la fecha en la app."
-                : "iOS no comparte datos con la app. Reinstala con AltStore."
+                ? String(localized: "Elige la fecha en la app.")
+                : String(localized: "iOS no comparte datos con la app. Reinstala con AltStore.")
             return ([.empty(note)], true)
         }
         let unit = SharedStore.unit
@@ -233,7 +233,7 @@ struct CountdownWidgetView: View {
                         .font(.system(size: size, weight: .semibold).monospacedDigit())
                         .frame(height: size * 1.25),
                     column.letter,
-                    hidden: dimmed && column.letter == "S"
+                    hidden: dimmed && column.letter == CountdownMath.letter(.second)
                 )
             }
             if let timer = entry.timer {
@@ -252,15 +252,18 @@ struct CountdownWidgetView: View {
         let hours = entry.timerShowsHours
 
         if hours {
-            group(TimerField(range: range, showsHours: true, size: size, digits: firstDigits, tail: ":00:00", pad: pad), "H")
-            group(TimerField(range: range, showsHours: true, size: size, digits: 2, tail: ":00", pad: false), "M")
+            group(TimerField(range: range, showsHours: true, size: size, digits: firstDigits, tail: ":00:00", pad: pad),
+                  CountdownMath.letter(.hour))
+            group(TimerField(range: range, showsHours: true, size: size, digits: 2, tail: ":00", pad: false),
+                  CountdownMath.letter(.minute))
         } else {
-            group(TimerField(range: range, showsHours: false, size: size, digits: firstDigits, tail: ":00", pad: pad), "M")
+            group(TimerField(range: range, showsHours: false, size: size, digits: firstDigits, tail: ":00", pad: pad),
+                  CountdownMath.letter(.minute))
         }
         // Con la pantalla en reposo (Always-On) los segundos no se pueden actualizar: se ocultan.
         group(
             TimerField(range: range, showsHours: hours, size: size, digits: 2, tail: "", pad: false),
-            "S",
+            CountdownMath.letter(.second),
             hidden: dimmed
         )
     }

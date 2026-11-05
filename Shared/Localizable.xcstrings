@@ -1,0 +1,63 @@
+{
+  "sourceLanguage" : "es",
+  "strings" : {
+    "Fecha" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Date" } } } },
+    "Formato" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Format" } } } },
+    "Nombre (opcional)" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Name (optional)" } } } },
+    "Ej. Viaje a Japón" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. Trip to Japan" } } } },
+    "Fecha y hora objetivo" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Target date and time" } } } },
+    "Fecha y hora" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Date and time" } } } },
+    "Cuenta atrás" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Countdown" } } } },
+    "Contar desde" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Count from" } } } },
+    "Unidad" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unit" } } } },
+    "Vista previa" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Preview" } } } },
+    "«Automático» oculta las unidades que valen 0 a la izquierda." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "“Automatic” hides leading units that are 0." } } } },
+
+    "Automático" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic" } } } },
+    "Años" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Years" } } } },
+    "Meses" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Months" } } } },
+    "Días" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Days" } } } },
+    "Horas" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hours" } } } },
+    "Minutos" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Minutes" } } } },
+    "Segundos" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Seconds" } } } },
+
+    "Sin fecha" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No date" } } } },
+    "Elige la fecha en la app." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick a date in the app." } } } },
+    "iOS no comparte datos con la app. Reinstala con AltStore." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "iOS isn't sharing data with the app. Reinstall with AltStore." } } } },
+    "¡Llegó el momento!" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "It's time!" } } } },
+    "Tiempo restante hasta la fecha elegida en la app." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Time remaining until the date chosen in the app." } } } },
+
+    "%lld año" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld year" } } } },
+    "%lld años" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld years" } } } },
+    "%lld mes" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld month" } } } },
+    "%lld meses" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld months" } } } },
+    "%lld día" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld day" } } } },
+    "%lld días" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld days" } } } },
+    "%lld hora" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld hour" } } } },
+    "%lld horas" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld hours" } } } },
+    "%lld minuto" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld minute" } } } },
+    "%lld minutos" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld minutes" } } } },
+    "%lld segundo" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld second" } } } },
+    "%lld segundos" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld seconds" } } } },
+
+    "letter.year" : { "localizations" : {
+      "es" : { "stringUnit" : { "state" : "translated", "value" : "A" } },
+      "en" : { "stringUnit" : { "state" : "translated", "value" : "Y" } } } },
+    "letter.month" : { "localizations" : {
+      "es" : { "stringUnit" : { "state" : "translated", "value" : "M" } },
+      "en" : { "stringUnit" : { "state" : "translated", "value" : "M" } } } },
+    "letter.day" : { "localizations" : {
+      "es" : { "stringUnit" : { "state" : "translated", "value" : "D" } },
+      "en" : { "stringUnit" : { "state" : "translated", "value" : "D" } } } },
+    "letter.hour" : { "localizations" : {
+      "es" : { "stringUnit" : { "state" : "translated", "value" : "H" } },
+      "en" : { "stringUnit" : { "state" : "translated", "value" : "H" } } } },
+    "letter.minute" : { "localizations" : {
+      "es" : { "stringUnit" : { "state" : "translated", "value" : "M" } },
+      "en" : { "stringUnit" : { "state" : "translated", "value" : "M" } } } },
+    "letter.second" : { "localizations" : {
+      "es" : { "stringUnit" : { "state" : "translated", "value" : "S" } },
+      "en" : { "stringUnit" : { "state" : "translated", "value" : "S" } } } }
+  },
+  "version" : "1.0"
+}

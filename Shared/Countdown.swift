@@ -9,13 +9,13 @@ enum CountdownUnit: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .auto: "Automático"
-        case .years: "Años"
-        case .months: "Meses"
-        case .days: "Días"
-        case .hours: "Horas"
-        case .minutes: "Minutos"
-        case .seconds: "Segundos"
+        case .auto: String(localized: "Automático")
+        case .years: String(localized: "Años")
+        case .months: String(localized: "Meses")
+        case .days: String(localized: "Días")
+        case .hours: String(localized: "Horas")
+        case .minutes: String(localized: "Minutos")
+        case .seconds: String(localized: "Segundos")
         }
     }
 
@@ -41,24 +41,24 @@ enum CountdownMath {
 
     static func letter(_ component: Calendar.Component) -> String {
         switch component {
-        case .year: "A"
-        case .month: "M"
-        case .day: "D"
-        case .hour: "H"
-        case .minute: "M"
-        default: "S"
+        case .year: String(localized: "letter.year")
+        case .month: String(localized: "letter.month")
+        case .day: String(localized: "letter.day")
+        case .hour: String(localized: "letter.hour")
+        case .minute: String(localized: "letter.minute")
+        default: String(localized: "letter.second")
         }
     }
 
     static func label(_ component: Calendar.Component, _ n: Int) -> String {
         let one = n == 1
         switch component {
-        case .year: return "\(n) \(one ? "año" : "años")"
-        case .month: return "\(n) \(one ? "mes" : "meses")"
-        case .day: return "\(n) \(one ? "día" : "días")"
-        case .hour: return "\(n) \(one ? "hora" : "horas")"
-        case .minute: return "\(n) \(one ? "minuto" : "minutos")"
-        default: return "\(n) \(one ? "segundo" : "segundos")"
+        case .year: return one ? String(localized: "\(n) año") : String(localized: "\(n) años")
+        case .month: return one ? String(localized: "\(n) mes") : String(localized: "\(n) meses")
+        case .day: return one ? String(localized: "\(n) día") : String(localized: "\(n) días")
+        case .hour: return one ? String(localized: "\(n) hora") : String(localized: "\(n) horas")
+        case .minute: return one ? String(localized: "\(n) minuto") : String(localized: "\(n) minutos")
+        default: return one ? String(localized: "\(n) segundo") : String(localized: "\(n) segundos")
         }
     }
 

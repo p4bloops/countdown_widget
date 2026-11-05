@@ -1,0 +1,12 @@
+{
+  "sourceLanguage" : "es",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuenta atrás" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Countdown" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}
