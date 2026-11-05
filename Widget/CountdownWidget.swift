@@ -18,19 +18,38 @@ struct ConfigIntent: WidgetConfigurationIntent {
     @Parameter(title: "Nombre")
     var name: String?
 
-    // No opcional y con valor por defecto: así iOS muestra un selector de fecha y hora.
-    @Parameter(title: "Fecha y hora", default: Date(timeIntervalSinceNow: 30 * 86_400))
-    var date: Date
-
     @Parameter(title: "Contar desde", default: .auto)
     var unit: CountdownUnit
 
-    // Plan B si el selector de fecha no funciona: tiene prioridad sobre "Fecha y hora".
-    @Parameter(title: "Fecha en texto (opcional)", description: "Formato: 2027-12-06 18:30")
+    // Opción 1: escribir la fecha completa. Si está rellena, tiene prioridad.
+    @Parameter(title: "Fecha en texto", description: "Formato: 2027-12-06 18:30")
     var dateText: String?
+
+    // Opción 2: campos numéricos (funcionan en cualquier versión de iOS).
+    @Parameter(title: "Año", default: 2027)
+    var year: Int
+
+    @Parameter(title: "Mes (1-12)", default: 1)
+    var month: Int
+
+    @Parameter(title: "Día", default: 1)
+    var day: Int
+
+    @Parameter(title: "Hora (0-23)", default: 0)
+    var hour: Int
+
+    @Parameter(title: "Minuto (0-59)", default: 0)
+    var minute: Int
 
     @Parameter(title: "Usar datos de la app", default: false)
     var useApp: Bool
+
+    /// Fecha objetivo: el texto si es válido; si no, los campos numéricos.
+    var targetDate: Date {
+        if let parsed = Self.parse(dateText) { return parsed }
+        let comps = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute)
+        return Calendar.current.date(from: comps) ?? Date(timeIntervalSinceNow: 30 * 86_400)
+    }
 
     /// Interpreta "2027-12-06 18:30", "2027-12-06T18:30" o "2027-12-06".
     static func parse(_ text: String?) -> Date? {
@@ -101,7 +120,7 @@ struct Provider: AppIntentTimelineProvider {
             unit = SharedStore.unit
             title = SharedStore.title
         } else {
-            target = ConfigIntent.parse(config.dateText) ?? config.date
+            target = config.targetDate
             unit = config.unit
             title = config.name ?? ""
         }
