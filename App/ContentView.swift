@@ -56,7 +56,7 @@ struct ContentView: View {
                     }
                 }
                 Section {
-                    Text("«Automático» oculta las unidades que valen 0 a la izquierda. Añade el widget desde la pantalla de inicio o de bloqueo. Si no muestra esta fecha, mantén pulsado el widget → Editar widget y elígela allí.")
+                    Text("«Automático» oculta las unidades que valen 0 a la izquierda. Añade el widget desde la pantalla de inicio o de bloqueo. Mantén pulsado el widget → Editar widget para elegir su fecha. «Usar datos de la app» solo funciona si iOS deja compartirlos (con Apple ID gratis suele no dejar).")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

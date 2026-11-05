@@ -13,16 +13,37 @@ struct CountdownWidgetBundle: WidgetBundle {
 
 struct ConfigIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Cuenta atrás"
-    static var description = IntentDescription("Si lo dejas vacío, usa lo configurado en la app.")
+    static var description = IntentDescription("Elige la fecha y hora objetivo.")
 
     @Parameter(title: "Nombre")
     var name: String?
 
-    @Parameter(title: "Fecha y hora")
-    var date: Date?
+    // No opcional y con valor por defecto: así iOS muestra un selector de fecha y hora.
+    @Parameter(title: "Fecha y hora", default: Date(timeIntervalSinceNow: 30 * 86_400))
+    var date: Date
 
-    @Parameter(title: "Contar desde")
-    var unit: CountdownUnit?
+    @Parameter(title: "Contar desde", default: .auto)
+    var unit: CountdownUnit
+
+    // Plan B si el selector de fecha no funciona: tiene prioridad sobre "Fecha y hora".
+    @Parameter(title: "Fecha en texto (opcional)", description: "Formato: 2027-12-06 18:30")
+    var dateText: String?
+
+    @Parameter(title: "Usar datos de la app", default: false)
+    var useApp: Bool
+
+    /// Interpreta "2027-12-06 18:30", "2027-12-06T18:30" o "2027-12-06".
+    static func parse(_ text: String?) -> Date? {
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return nil }
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        for format in ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd"] {
+            f.dateFormat = format
+            if let date = f.date(from: text) { return date }
+        }
+        return nil
+    }
 }
 
 // MARK: - Entrada del timeline
@@ -71,10 +92,19 @@ struct Provider: AppIntentTimelineProvider {
     }
 
     private func makeEntries(_ config: ConfigIntent) -> (entries: [CountdownEntry], finished: Bool) {
-        // El widget manda; si no tiene datos propios, usa los de la app.
-        guard let target = config.date ?? SharedStore.targetDate else { return ([.empty()], true) }
-        let unit = config.unit ?? SharedStore.unit
-        let title = config.name ?? SharedStore.title
+        let target: Date
+        let unit: CountdownUnit
+        let title: String
+        if config.useApp {
+            guard let appDate = SharedStore.targetDate else { return ([.empty()], true) }
+            target = appDate
+            unit = SharedStore.unit
+            title = SharedStore.title
+        } else {
+            target = ConfigIntent.parse(config.dateText) ?? config.date
+            unit = config.unit
+            title = config.name ?? ""
+        }
         let cal = CountdownMath.calendar
 
         var entries: [CountdownEntry] = []
@@ -190,9 +220,9 @@ struct CountdownWidgetView: View {
         VStack(alignment: .leading, spacing: 3) {
             switch entry.state {
             case .empty:
-                Text("Sin fecha")
+                Text("Sin datos de la app")
                     .font(.headline)
-                Text("Mantén pulsado el widget → Editar widget, o elige la fecha en la app.")
+                Text("Edita el widget y desactiva «Usar datos de la app».")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             case .finished:
