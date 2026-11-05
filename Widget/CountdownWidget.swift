@@ -83,6 +83,8 @@ struct CountdownEntry: TimelineEntry {
     /// Cronómetro vivo (h:mm:ss o mm:ss). Lo dibuja el sistema, así que cuenta solo cada segundo.
     let timer: ClosedRange<Date>?
     let timerShowsHours: Bool
+    /// Fecha objetivo en texto (diagnóstico: confirma que el widget leyó la fecha).
+    var targetLabel: String = ""
 
     static let placeholder = CountdownEntry(
         date: .now, state: .running, title: "Evento",
@@ -130,9 +132,13 @@ struct Provider: AppIntentTimelineProvider {
         var d = Date()
         let perSecond = unit == .minutes || unit == .seconds   // aquí no hay cronómetro posible
 
+        let labelFormatter = DateFormatter()
+        labelFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let targetLabel = labelFormatter.string(from: target)
+
         func add(_ columns: [Column], timer: ClosedRange<Date>? = nil, hours: Bool = false) {
             entries.append(CountdownEntry(date: d, state: .running, title: title, columns: columns,
-                                          timer: timer, timerShowsHours: hours))
+                                          timer: timer, timerShowsHours: hours, targetLabel: targetLabel))
         }
 
         while d < target && entries.count < 150 {
@@ -200,14 +206,14 @@ struct TimerBlock: View {
     }
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            ZStack(alignment: .trailing) {
-                Text(sample).hidden()   // fija el ancho; el cronómetro, si no, ocupa todo el espacio
-                Text(timerInterval: range, countsDown: true, showsHours: showsHours)
-                    .multilineTextAlignment(.trailing)
-            }
-            .font(.system(size: size, weight: .semibold, design: .monospaced))
-            .monospacedDigit()
+        // Ancho fijo calculado: el texto del cronómetro, por sí solo, se expande sin control.
+        let width = cw * CGFloat(sample.count)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(timerInterval: range, countsDown: true, showsHours: showsHours)
+                .font(.system(size: size, weight: .semibold, design: .monospaced))
+                .multilineTextAlignment(.trailing)
+                .lineLimit(1)
+                .frame(width: width, height: size * 1.25, alignment: .trailing)
 
             HStack(spacing: 0) {
                 if showsHours {
@@ -218,8 +224,9 @@ struct TimerBlock: View {
                 Spacer().frame(width: cw)
                 tag("S", width: cw * 2)
             }
+            .frame(width: width, alignment: .trailing)
         }
-        .fixedSize()
+        .frame(width: width)
     }
 }
 
@@ -270,6 +277,12 @@ struct CountdownWidgetView: View {
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
+
+                if family != .accessoryRectangular, !entry.targetLabel.isEmpty {
+                    Text("→ \(entry.targetLabel)")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
