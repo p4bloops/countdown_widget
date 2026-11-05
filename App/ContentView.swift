@@ -62,7 +62,7 @@ struct ContentView: View {
                     } else {
                         Label("No disponible en esta instalación", systemImage: "xmark.circle.fill")
                             .foregroundStyle(.red)
-                        Text("iOS no deja compartir datos entre la app y el widget. Instala con AltStore, o configura la fecha dentro de cada widget (mantén pulsado → Editar widget → apaga «Usar datos de la app»).")
+                        Text("iOS no deja compartir datos entre la app y el widget. Instala con AltStore, o reinstala la app y vuelve a abrirla.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }

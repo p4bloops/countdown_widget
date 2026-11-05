@@ -1,9 +1,8 @@
-import AppIntents
 import Foundation
 
 // MARK: - Unidad de inicio
 
-enum CountdownUnit: String, CaseIterable, Identifiable, AppEnum {
+enum CountdownUnit: String, CaseIterable, Identifiable {
     case auto, years, months, days, hours, minutes, seconds
 
     var id: String { rawValue }
@@ -19,18 +18,6 @@ enum CountdownUnit: String, CaseIterable, Identifiable, AppEnum {
         case .seconds: "Segundos"
         }
     }
-
-    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Unidad")
-
-    static let caseDisplayRepresentations: [CountdownUnit: DisplayRepresentation] = [
-        .auto: DisplayRepresentation(title: "Automático"),
-        .years: DisplayRepresentation(title: "Años"),
-        .months: DisplayRepresentation(title: "Meses"),
-        .days: DisplayRepresentation(title: "Días"),
-        .hours: DisplayRepresentation(title: "Horas"),
-        .minutes: DisplayRepresentation(title: "Minutos"),
-        .seconds: DisplayRepresentation(title: "Segundos"),
-    ]
 
     /// Unidades desde la elegida hasta segundos. "Automático" parte desde años.
     var components: [Calendar.Component] {

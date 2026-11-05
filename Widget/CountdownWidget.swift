@@ -1,4 +1,3 @@
-import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -6,61 +5,6 @@ import WidgetKit
 struct CountdownWidgetBundle: WidgetBundle {
     var body: some Widget {
         CountdownWidget()
-    }
-}
-
-// MARK: - Configuración del widget (editable manteniendo pulsado el widget)
-
-struct ConfigIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Cuenta atrás"
-    static var description = IntentDescription("Por defecto usa la fecha elegida en la app.")
-
-    @Parameter(title: "Usar datos de la app", default: true)
-    var useApp: Bool
-
-    // Lo de abajo solo se usa si «Usar datos de la app» está apagado (o la app no comparte datos).
-    @Parameter(title: "Nombre")
-    var name: String?
-
-    @Parameter(title: "Contar desde", default: .auto)
-    var unit: CountdownUnit
-
-    // Opción 1: escribir la fecha completa. Si está rellena, tiene prioridad sobre los campos numéricos.
-    @Parameter(title: "Fecha en texto", description: "Formato: 2027-12-06 18:30")
-    var dateText: String?
-
-    // Opción 2: campos numéricos (funcionan en cualquier versión de iOS).
-    @Parameter(title: "Año", default: 2027)
-    var year: Int
-
-    @Parameter(title: "Mes (1-12)", default: 1)
-    var month: Int
-
-    @Parameter(title: "Día", default: 1)
-    var day: Int
-
-    @Parameter(title: "Hora (0-23)", default: 0)
-    var hour: Int
-
-    @Parameter(title: "Minuto (0-59)", default: 0)
-    var minute: Int
-
-    var fieldsDate: Date {
-        let comps = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute)
-        return Calendar.current.date(from: comps) ?? Date(timeIntervalSinceNow: 30 * 86_400)
-    }
-
-    /// Interpreta "2027-12-06 18:30", "2027-12-06T18:30" o "2027-12-06".
-    static func parse(_ text: String?) -> Date? {
-        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return nil }
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = .current
-        for format in ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd"] {
-            f.dateFormat = format
-            if let date = f.date(from: text) { return date }
-        }
-        return nil
     }
 }
 
@@ -83,8 +27,6 @@ struct CountdownEntry: TimelineEntry {
     let timer: ClosedRange<Date>?
     /// true: horas+minutos+segundos. false: minutos+segundos.
     let timerShowsHours: Bool
-    /// Fecha objetivo en texto (diagnóstico).
-    var targetLabel: String = ""
     /// Explicación cuando no hay fecha.
     var note: String = ""
 
@@ -103,44 +45,28 @@ struct CountdownEntry: TimelineEntry {
 
 // MARK: - Provider
 
-struct Provider: AppIntentTimelineProvider {
+struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> CountdownEntry { .placeholder }
 
-    func snapshot(for configuration: ConfigIntent, in context: Context) async -> CountdownEntry {
-        makeEntries(configuration).entries.first ?? .placeholder
+    func getSnapshot(in context: Context, completion: @escaping (CountdownEntry) -> Void) {
+        completion(makeEntries().entries.first ?? .placeholder)
     }
 
-    func timeline(for configuration: ConfigIntent, in context: Context) async -> Timeline<CountdownEntry> {
-        let result = makeEntries(configuration)
-        return Timeline(entries: result.entries, policy: result.finished ? .never : .atEnd)
+    func getTimeline(in context: Context, completion: @escaping (Timeline<CountdownEntry>) -> Void) {
+        let result = makeEntries()
+        completion(Timeline(entries: result.entries, policy: result.finished ? .never : .atEnd))
     }
 
-    /// Prioridad: datos de la app > fecha en texto > campos numéricos (solo si no se usa la app).
-    private func resolve(_ config: ConfigIntent) -> (target: Date, unit: CountdownUnit, title: String)? {
-        if config.useApp, let appDate = SharedStore.targetDate {
-            let title = SharedStore.title.isEmpty ? (config.name ?? "") : SharedStore.title
-            return (appDate, SharedStore.unit, title)
-        }
-        if let parsed = ConfigIntent.parse(config.dateText) {
-            return (parsed, config.unit, config.name ?? "")
-        }
-        if !config.useApp {
-            return (config.fieldsDate, config.unit, config.name ?? "")
-        }
-        return nil
-    }
-
-    private func makeEntries(_ config: ConfigIntent) -> (entries: [CountdownEntry], finished: Bool) {
-        guard let (target, unit, title) = resolve(config) else {
+    private func makeEntries() -> (entries: [CountdownEntry], finished: Bool) {
+        guard let target = SharedStore.targetDate else {
             let note = SharedStore.isGroupAvailable
                 ? "Elige la fecha en la app."
-                : "iOS no comparte datos con la app. Edita el widget, apaga «Usar datos de la app» y escribe la fecha."
+                : "iOS no comparte datos con la app. Reinstala con AltStore."
             return ([.empty(note)], true)
         }
+        let unit = SharedStore.unit
+        let title = SharedStore.title
         let cal = CountdownMath.calendar
-        let labelFormatter = DateFormatter()
-        labelFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-        let label = labelFormatter.string(from: target)
 
         var entries: [CountdownEntry] = []
         var d = Date()
@@ -148,7 +74,7 @@ struct Provider: AppIntentTimelineProvider {
 
         func add(_ date: Date, _ columns: [Column], timer: ClosedRange<Date>? = nil, hours: Bool = false) {
             entries.append(CountdownEntry(date: date, state: .running, title: title, columns: columns,
-                                          timer: timer, timerShowsHours: hours, targetLabel: label))
+                                          timer: timer, timerShowsHours: hours))
         }
 
         /// Una entrada con cronómetro, más otra cuando el primer campo pasa a un solo dígito (para mostrar "09").
@@ -207,29 +133,35 @@ struct Provider: AppIntentTimelineProvider {
 
 /// Un campo (horas, minutos o segundos) recortado del cronómetro del sistema.
 /// El sistema dibuja "9:44:05"; mostramos solo una ventana del texto para quitar los ":".
+/// Los anchos se miden con textos ocultos, así funciona con cualquier fuente.
 struct TimerField: View {
     let range: ClosedRange<Date>
     let showsHours: Bool
     let size: CGFloat
-    /// Caracteres (contados desde la derecha) que hay que saltarse para llegar a este campo.
-    let shift: Int
     /// Dígitos que muestra la ventana.
-    let cells: Int
+    let digits: Int
+    /// Lo que el cronómetro dibuja a la derecha de este campo (":00:00", ":00" o "").
+    let tail: String
     /// Antepone un "0" fijo (cuando el primer campo tiene un solo dígito).
     let pad: Bool
 
     var body: some View {
-        let cw = size * 0.6   // ancho de un carácter monoespaciado
-        let font = Font.system(size: size, weight: .semibold, design: .monospaced)
+        let font = Font.system(size: size, weight: .semibold).monospacedDigit()
+        let window = String(repeating: "0", count: digits)
         HStack(spacing: 0) {
             if pad { Text("0").font(font) }
-            Text(timerInterval: range, countsDown: true, showsHours: showsHours)
-                .font(font)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(1)
-                .frame(width: cw * 16, alignment: .trailing)
-                .offset(x: CGFloat(shift) * cw)
-                .frame(width: cw * CGFloat(cells), alignment: .trailing)
+            Text(window).font(font).hidden()   // define el tamaño de la ventana
+                .overlay(alignment: .leading) {
+                    // Mismo texto que el cronómetro, alineado para que este campo caiga dentro de la ventana.
+                    Text(window + tail).font(font).fixedSize().hidden()
+                        .overlay(alignment: .trailing) {
+                            Text(timerInterval: range, countsDown: true, showsHours: showsHours)
+                                .font(font)
+                                .multilineTextAlignment(.trailing)
+                                .lineLimit(1)
+                                .frame(width: 400, alignment: .trailing)
+                        }
+                }
                 .clipped()
         }
         .frame(height: size * 1.25)
@@ -257,12 +189,12 @@ struct CountdownWidgetView: View {
         return min(maxSize, available / units)
     }
 
-    private func letterFont(_ size: CGFloat) -> Font { .system(size: max(8, size * 0.4), weight: .medium) }
-
     private func group<Number: View>(_ number: Number, _ letter: String, hidden: Bool = false) -> some View {
         VStack(spacing: 0) {
             number
-            Text(letter).font(letterFont(size)).foregroundStyle(.secondary)
+            Text(letter)
+                .font(.system(size: max(8, size * 0.4), weight: .medium))
+                .foregroundStyle(.secondary)
         }
         .opacity(hidden ? 0 : 1)
     }
@@ -286,11 +218,6 @@ struct CountdownWidgetView: View {
                         .lineLimit(1)
                 }
                 counter
-                if family != .accessoryRectangular, !entry.targetLabel.isEmpty {
-                    Text("→ \(entry.targetLabel)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -299,40 +226,40 @@ struct CountdownWidgetView: View {
 
     private var counter: some View {
         let size = self.size
-        let cw = size * 0.6
         return HStack(alignment: .top, spacing: size * 0.55) {
             ForEach(entry.columns, id: \.self) { column in
                 group(
                     Text(String(format: "%02d", column.value))
-                        .font(.system(size: size, weight: .semibold, design: .monospaced))
+                        .font(.system(size: size, weight: .semibold).monospacedDigit())
                         .frame(height: size * 1.25),
                     column.letter,
                     hidden: dimmed && column.letter == "S"
                 )
             }
             if let timer = entry.timer {
-                timerGroups(timer, size: size, cw: cw)
+                timerGroups(timer, size: size)
             }
         }
         .lineLimit(1)
     }
 
     @ViewBuilder
-    private func timerGroups(_ range: ClosedRange<Date>, size: CGFloat, cw: CGFloat) -> some View {
+    private func timerGroups(_ range: ClosedRange<Date>, size: CGFloat) -> some View {
         let remaining = range.upperBound.timeIntervalSince(range.lowerBound)
         let first = Int(remaining / (entry.timerShowsHours ? 3600 : 60))
         let firstDigits = max(1, String(first).count)
         let pad = firstDigits == 1
+        let hours = entry.timerShowsHours
 
-        if entry.timerShowsHours {
-            group(TimerField(range: range, showsHours: true, size: size, shift: 6, cells: firstDigits, pad: pad), "H")
-            group(TimerField(range: range, showsHours: true, size: size, shift: 3, cells: 2, pad: false), "M")
+        if hours {
+            group(TimerField(range: range, showsHours: true, size: size, digits: firstDigits, tail: ":00:00", pad: pad), "H")
+            group(TimerField(range: range, showsHours: true, size: size, digits: 2, tail: ":00", pad: false), "M")
         } else {
-            group(TimerField(range: range, showsHours: false, size: size, shift: 3, cells: firstDigits, pad: pad), "M")
+            group(TimerField(range: range, showsHours: false, size: size, digits: firstDigits, tail: ":00", pad: pad), "M")
         }
         // Con la pantalla en reposo (Always-On) los segundos no se pueden actualizar: se ocultan.
         group(
-            TimerField(range: range, showsHours: entry.timerShowsHours, size: size, shift: 0, cells: 2, pad: false),
+            TimerField(range: range, showsHours: hours, size: size, digits: 2, tail: "", pad: false),
             "S",
             hidden: dimmed
         )
@@ -343,11 +270,11 @@ struct CountdownWidgetView: View {
 
 struct CountdownWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "CountdownWidget", intent: ConfigIntent.self, provider: Provider()) { entry in
+        StaticConfiguration(kind: "CountdownWidget", provider: Provider()) { entry in
             CountdownWidgetView(entry: entry)
         }
         .configurationDisplayName("Cuenta atrás")
-        .description("Tiempo restante hasta tu fecha.")
+        .description("Tiempo restante hasta la fecha elegida en la app.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }
