@@ -1,14 +1,16 @@
+import AppIntents
 import Foundation
 
 // MARK: - Unidad de inicio
 
-enum CountdownUnit: String, CaseIterable, Identifiable {
-    case years, months, days, hours, minutes, seconds
+enum CountdownUnit: String, CaseIterable, Identifiable, AppEnum {
+    case auto, years, months, days, hours, minutes, seconds
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
+        case .auto: "Automático"
         case .years: "Años"
         case .months: "Meses"
         case .days: "Días"
@@ -18,11 +20,23 @@ enum CountdownUnit: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Todas las unidades que se muestran, desde la elegida hasta segundos.
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Unidad")
+
+    static let caseDisplayRepresentations: [CountdownUnit: DisplayRepresentation] = [
+        .auto: DisplayRepresentation(title: "Automático"),
+        .years: DisplayRepresentation(title: "Años"),
+        .months: DisplayRepresentation(title: "Meses"),
+        .days: DisplayRepresentation(title: "Días"),
+        .hours: DisplayRepresentation(title: "Horas"),
+        .minutes: DisplayRepresentation(title: "Minutos"),
+        .seconds: DisplayRepresentation(title: "Segundos"),
+    ]
+
+    /// Unidades desde la elegida hasta segundos. "Automático" parte desde años.
     var components: [Calendar.Component] {
         let all: [Calendar.Component] = [.year, .month, .day, .hour, .minute, .second]
         let start: Calendar.Component = switch self {
-        case .years: .year
+        case .auto, .years: .year
         case .months: .month
         case .days: .day
         case .hours: .hour
@@ -31,41 +45,23 @@ enum CountdownUnit: String, CaseIterable, Identifiable {
         }
         return Array(all[all.firstIndex(of: start)!...])
     }
-
-    /// Unidades "estáticas" del widget: las que cambian poco. El resto se muestra con un cronómetro vivo.
-    var staticComponents: [Calendar.Component] {
-        switch self {
-        case .years: [.year, .month, .day]
-        case .months: [.month, .day]
-        case .days: [.day]
-        case .hours: [.hour]
-        case .minutes: [.minute]
-        case .seconds: [.second]
-        }
-    }
-
-    /// El cronómetro vivo muestra h:mm:ss (true), m:ss (false) o no se muestra (nil).
-    var liveTimerShowsHours: Bool? {
-        switch self {
-        case .years, .months, .days: true
-        case .hours, .minutes: false
-        case .seconds: nil
-        }
-    }
-
-    var liveTimerCaption: String {
-        switch self {
-        case .years, .months, .days: "horas : min : seg"
-        case .hours, .minutes: "min : seg"
-        case .seconds: ""
-        }
-    }
 }
 
 // MARK: - Cálculo
 
 enum CountdownMath {
     static var calendar: Calendar { Calendar.current }
+
+    static func letter(_ component: Calendar.Component) -> String {
+        switch component {
+        case .year: "A"
+        case .month: "M"
+        case .day: "D"
+        case .hour: "H"
+        case .minute: "M"
+        default: "S"
+        }
+    }
 
     static func label(_ component: Calendar.Component, _ n: Int) -> String {
         let one = n == 1
@@ -90,10 +86,17 @@ enum CountdownMath {
         }
     }
 
-    /// Ej.: ["1 año", "1 mes", "1 día", "0 horas", "0 minutos", "12 segundos"]
-    static func parts(unit: CountdownUnit, from: Date, to: Date) -> [String] {
+    /// Unidades con su valor, sin los ceros de la izquierda (siempre queda al menos segundos).
+    static func significant(unit: CountdownUnit, from: Date, to: Date) -> [(component: Calendar.Component, value: Int)] {
         let comps = calendar.dateComponents(Set(unit.components), from: from, to: max(from, to))
-        return unit.components.map { label($0, value(comps, $0)) }
+        let all = unit.components.map { (component: $0, value: value(comps, $0)) }
+        let first = all.firstIndex { $0.value > 0 } ?? all.count - 1
+        return Array(all[first...])
+    }
+
+    /// Ej.: ["13 días", "11 horas", "15 minutos", "30 segundos"]
+    static func parts(unit: CountdownUnit, from: Date, to: Date) -> [String] {
+        significant(unit: unit, from: from, to: to).map { label($0.component, $0.value) }
     }
 }
 
@@ -120,7 +123,7 @@ enum SharedStore {
     }
 
     static var unit: CountdownUnit {
-        get { CountdownUnit(rawValue: defaults.string(forKey: "unit") ?? "") ?? .days }
+        get { CountdownUnit(rawValue: defaults.string(forKey: "unit") ?? "") ?? .auto }
         set { defaults.set(newValue.rawValue, forKey: "unit") }
     }
 

@@ -4,7 +4,7 @@ import WidgetKit
 struct ContentView: View {
     @State private var target: Date = SharedStore.targetDate
         ?? Calendar.current.date(byAdding: .month, value: 1, to: .now)!
-    @State private var unit: CountdownUnit = SharedStore.unit
+    @State private var unit: CountdownUnit = SharedStore.unit   // .auto por defecto
     @State private var title: String = SharedStore.title
 
     var body: some View {
@@ -56,7 +56,7 @@ struct ContentView: View {
                     }
                 }
                 Section {
-                    Text("Añade el widget manteniendo pulsada la pantalla de inicio → «+» → Cuenta atrás.")
+                    Text("«Automático» oculta las unidades que valen 0 a la izquierda. Añade el widget desde la pantalla de inicio o de bloqueo. Si no muestra esta fecha, mantén pulsado el widget → Editar widget y elígela allí.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
